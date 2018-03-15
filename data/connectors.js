@@ -1,4 +1,5 @@
 import casual from 'casual';
+import fetch from 'node-fetch';
 import Mongoose from 'mongoose';
 import Sequelize from 'sequelize';
 import _ from 'lodash';
@@ -34,6 +35,16 @@ const PostModel = db.define('post', {
 AuthorModel.hasMany(PostModel);
 PostModel.belongsTo(AuthorModel);
 
+const FortuneCookie = {
+  getOne() {
+    return fetch('http://fortunecookieapi.herokuapp.com/v1/cookie')
+      .then(res => res.json())
+      .then(res => {
+        return res[0].fortune.message;
+      });
+  },
+};
+
 // create mock data with a seed, so we always get the same
 casual.seed(123);
 db.sync({ force: true }).then(() => {
@@ -59,4 +70,4 @@ db.sync({ force: true }).then(() => {
 const Author = db.models.author;
 const Post = db.models.post;
 
-export { Author, Post, View };
+export { Author, Post, View, FortuneCookie };
