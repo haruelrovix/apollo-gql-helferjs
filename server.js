@@ -10,13 +10,24 @@ const app = express();
 
 const engine = new ApolloEngine({
   apiKey: process.env.API_KEY,
+  stores: [
+    {
+      name: 'inMemEmbeddedCache',
+      inMemory: {
+        cacheSize: 20971520 // 20 MB
+      }
+    }
+  ],
+  queryCache: {
+    publicFullQueryStore: 'inMemEmbeddedCache'
+  }
 });
 
 app.use(compression())
 app.use(
   '/graphql',
   bodyParser.json(),
-  graphqlExpress({ schema, tracing: true })
+  graphqlExpress({ schema, tracing: true, cacheControl: true })
 );
 app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
 
