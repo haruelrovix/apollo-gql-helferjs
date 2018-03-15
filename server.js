@@ -1,17 +1,32 @@
-import express from 'express';
-import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import bodyParser from 'body-parser';
+import compression from 'compression';
+import express from 'express';
+import { ApolloEngine } from 'apollo-engine';
+import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
+
 import schema from './data/schema';
 
-const GRAPHQL_PORT = 3000;
+const app = express();
 
-const graphQLServer = express();
+const engine = new ApolloEngine({
+  apiKey: process.env.API_KEY,
+});
 
-graphQLServer.use('/graphql', bodyParser.json(), graphqlExpress({ schema }));
-graphQLServer.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
-
-graphQLServer.listen(GRAPHQL_PORT, () =>
-  console.log(
-    `GraphiQL is now running on http://localhost:${GRAPHQL_PORT}/graphiql`
-  )
+app.use(compression())
+app.use(
+  '/graphql',
+  bodyParser.json(),
+  graphqlExpress({ schema, tracing: true })
 );
+app.use('/graphiql', graphiqlExpress({ endpointURL: '/graphql' }));
+
+engine.listen({
+  port: process.env.PORT,
+  graphqlPaths: ['/graphql'],
+  expressApp: app,
+  launcherOptions: {
+    startupTimeout: 3000,
+  },
+}, () => {
+  console.log(`GraphiQL is now running on http://localhost:${process.env.PORT}/graphiql`);
+});
